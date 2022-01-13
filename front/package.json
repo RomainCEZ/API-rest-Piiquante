@@ -1,0 +1,25 @@
+{
+  "name": "hot-takes",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.html",
+  "scripts": {
+    "start": "run-script-os",
+    "start:linux:darwin": "concurrently \"node ./node_modules/.bin/http-server -a localhost -p 8081\"  \"sleep 1 && open http://localhost:8080\"",
+    "start:win32": "node node_modules/live-server/live-server --port=8080",
+    "dev": "concurrently \"node node_modules/live-server/live-server --port=8080\" \"nodemon ../back/server \""
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "concurrently": "^5.3.0",
+    "cypress": "^9.2.1",
+    "http-server": "^0.11.2",
+    "live-server": "^1.2.1",
+    "run-script-os": "^1.1.6"
+  },
+  "devDependencies": {
+    "cypress-file-upload": "^5.0.8",
+    "jest": "^27.4.7"
+  }
+}
