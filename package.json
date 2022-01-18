@@ -8,10 +8,10 @@
   },
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "cypress": "^9.2.1"
-  },
+
   "devDependencies": {
+    "cypress": "^9.2.1",
+    "jest": "^27.4.7",
     "cypress-file-upload": "^5.0.8"
   }
 }
