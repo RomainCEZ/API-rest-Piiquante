@@ -2,80 +2,85 @@ const GetSaucesService = require('../domain/GetSaucesService');
 const Sauce = require('../domain/Sauce');
 const InMemorySauceRepository = require('../domain/mock/InMemorySauceRepository');
 
-class SauceRequestDTO {
-    constructor({name, description, manufacturer, mainPepper, heat, imageFileName, userId}) {
-        this.name = name,
-        this.description = description,
-        this.manufacturer = manufacturer,
-        this.mainPepper = mainPepper,
-        this.heat = heat,
-        this.imageFileName = imageFileName,
-        this.userId = userId
-    }
-}
-
-const placeholderSauce = new Sauce(
-    'id',
-    "Softest sauce",
-    "The softest of all sauces",
-    "Ginger",
-    "Lots of fur",
-    1,
-    "Ginger1642004206341.jpeg"
-);
-placeholderSauce.likes = 1;
-placeholderSauce.userLiked = ['me'];
-placeholderSauce.userId = 'free_login_for_everyone'
+const placeholderSauce = new Sauce({
+    id: 'id',
+    userId: 'cannot be edited',
+    name: 'Softest sauce',
+    description: 'The softest of all sauces',
+    manufacturer: 'Ginger',
+    mainPepper: 'Lots of fur',
+    heat: 1,
+    imageFileName: 'Ginger_Sauce.jpeg',
+    likes: 1,
+    userLiked: ['cannot be edited']
+});
 const sauceRepository = new InMemorySauceRepository([placeholderSauce]);
 const getSaucesService = new GetSaucesService(sauceRepository);
 
 exports.getAllSauces = (req, res, next) => {
-    const allSauces = getSaucesService.execute();
-    res.status(200).json(allSauces);
+    try {
+        const allSauces = getSaucesService.getAllSauces();
+        res.status(200).json(allSauces);
+    } catch (error) {
+        res.status(500).json(error);
+    }
 }
 
 exports.getOneSauce = (req, res, next) => {
-    const oneSauce = getSaucesService.getOneSauce(req.params.id);
-    res.status(200).json(oneSauce);
+    try {
+        const oneSauce = getSaucesService.getOneSauce(req.params.id);
+        res.status(200).json(oneSauce);
+    } catch (error) {
+        res.status(404).json(error);
+    }
 }
 
 exports.postSauce = (req, res, next) => {
-    console.log(req.body)
-    console.log(req.file)
-    const sauceRequest = JSON.parse(req.body.sauce);
-    console.log(req.body.sauce)
-    const newSauceDTO = new SauceRequestDTO({
-        ...sauceRequest,
-        imageFileName: req.file.filename
-    });
-    getSaucesService.createSauce(newSauceDTO);
-    res.status(201).json({ message: 'New sauce saved !' });
+    try {
+        const sauceRequest = JSON.parse(req.body.sauce);
+        const newSauce = new Sauce({
+            ...sauceRequest,
+            imageFileName: req.file.filename
+        });
+        getSaucesService.createSauce(newSauce);
+        res.status(201).json({ message: 'New sauce saved !' });
+    } catch (error) {
+        res.status(500).json(error);
+    }
 }
 exports.updateSauce = (req, res, next) => {
-    // console.log(req.body);
-    // console.log(req.file);
     if (req.file) {
         const updatedSauceRequest = JSON.parse(req.body.sauce);
-        const updatedSauceDTO = new SauceRequestDTO ({
+        const updatedSauce = new Sauce({
+            id: req.params.id,
             ...updatedSauceRequest,
             imageFileName: req.file.filename
         });
-        getSaucesService.updateSauce(updatedSauceDTO, req.params.id);
+        getSaucesService.updateSauce(updatedSauce);
     } else {
         const updatedSauceRequest = req.body;
-        const updatedSauceDTO = new SauceRequestDTO ({
+        const updatedSauce = new Sauce({
+            id: req.params.id,
             ...updatedSauceRequest
         });
-        getSaucesService.updateSauce(updatedSauceDTO, req.params.id);
+        getSaucesService.updateSauce(updatedSauce);
     }
     res.status(200).json({ message: 'Sauce updated !' });
 }
 
 exports.deleteSauce = (req, res, next) => {
-    getSaucesService.deleteSauce(req.params.id);
-    res.status(200).json({ message: `Sauce ${req.params.id} deleted !` });
+    try {
+        getSaucesService.deleteSauce(req.params.id);
+        res.status(200).json({ message: `Sauce ${req.params.id} deleted !` });
+    } catch (error) {
+        res.status(500).json(error);
+    }
 }
 
 exports.updateLikes = (req, res, next) => {
-
+    const sauceId = req.params.id;
+    const userId = req.body.userId;
+    const like = req.body.like;
+    getSaucesService.handleLikes(sauceId, userId, like);
+    res.status(200).json({ message: 'Likes updated !' });
 }
