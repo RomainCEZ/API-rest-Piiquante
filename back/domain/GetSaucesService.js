@@ -1,52 +1,88 @@
 const Sauce = require('./Sauce');
 const fs = require('fs');
 
-class GetSauces {
+class GetSaucesService {
     constructor(saucesRepository) {
         this.saucesRepository = saucesRepository;
     }
-    execute() {
-        return this.saucesRepository.getSauces();
+    getAllSauces() {
+        return this.saucesRepository.getAllSauces();
     }
     getOneSauce(sauceId) {
-        const sauceList = this.saucesRepository.getSauces();
-        const sauce = sauceList.find( sauce => sauce._id == sauceId);
-        return sauce;
+        return this.saucesRepository.getOneSauce(sauceId);
     }
-    createSauce(newSauce) {
-        const sauce = new Sauce(newSauce._id, newSauce.name, newSauce.description, newSauce.manufacturer, newSauce.mainPepper, newSauce.heat, newSauce.imageFileName, newSauce.userId);
-        this.saucesRepository.addNewSauce(sauce);
+    createSauce(sauce) {
+        this.saucesRepository.saveSauce(sauce);
     }
-    updateSauce(updatedSauce, sauceId) {
-        const sauceList = this.saucesRepository.getSauces();
-        const sauceIndex = sauceList.findIndex( sauce => sauce._id == sauceId);
-        const sauceToUpdate = sauceList[sauceIndex];
-        sauceToUpdate.description = updatedSauce.description
-        sauceToUpdate.heat = updatedSauce.heat
-        sauceToUpdate.mainPepper = updatedSauce.mainPepper
-        sauceToUpdate.manufacturer = updatedSauce.manufacturer
-        sauceToUpdate.name = updatedSauce.name
+    updateSauce(updatedSauce) {
         if (updatedSauce.imageFileName) {
-            fs.unlink(`./images/${sauceToUpdate.imageUrl.split('/images/')[1]}`, (err) => {
+            const previousFileName = sauceToUpdate.imageUrl.split('/images/')[1]
+            fs.unlink(`./images/${previousFileName}`, (err) => {
                 if (err) {
-                    console.error(err)
                     return
                 }
             })
             sauceToUpdate.imageUrl = `http://localhost:3000/images/${updatedSauce.imageFileName}`
         }
+        this.saucesRepository.updateSauce(updatedSauce);
     }
-    deleteSauce(sauceId) {
-        const sauceList = this.saucesRepository.getSauces();
-        const sauceIndex = sauceList.findIndex( sauce => sauce._id == sauceId);
-        fs.unlink(`./images/${sauceList[sauceIndex].imageFileName}`, (err) => {
+    deleteSauce(sauceId) { 
+        const imageUrl = this.saucesRepository.getOneSauce(sauceId).imageUrl;
+        const fileName = imageUrl.split('/images/')[1]
+        fs.unlink(`./images/${fileName}`, (err) => {
             if (err) {
-                console.error(err)
                 return
             }
         })
-        sauceList.splice(sauceIndex, 1);
+        this.saucesRepository.deleteSauceData(sauceId);
+    }
+    handleLikes(sauceId, userId, like) {
+        if (like === 1) {
+            this.likeSauce(sauceId, userId);
+        }
+        if (like === -1) {
+            this.dislikeSauce(sauceId, userId);
+        }
+        if (like === 0) {
+            this.cancelLike(sauceId, userId);
+        }
+    }
+    likeSauce(sauceId, userId) {
+        const sauce = this.saucesRepository.getOneSauce(sauceId);
+        if (!sauce.userLiked.includes(userId)) {
+            sauce.likes += 1;
+            sauce.userLiked.push(userId);
+        }
+        if (sauce.userDisliked.includes(userId)) {
+            sauce.dislikes -= 1;
+            const userDislikedIndex = sauce.userDisliked.findIndex( userDisliked => userDisliked == userId);
+            sauce.userDisliked.splice(userDislikedIndex, 1);
+        }
+    }
+    dislikeSauce(sauceId, userId) {
+        const sauce = this.saucesRepository.getOneSauce(sauceId);
+        if (!sauce.userDisliked.includes(userId)) {
+            sauce.dislikes += 1;
+            sauce.userDisliked.push(userId);
+        }
+        if (sauce.userLiked.includes(userId)) {
+            sauce.likes -= 1;
+            const userLikedIndex = sauce.userLiked.findIndex( userDisliked => userDisliked == userId);
+            sauce.userLiked.splice(userLikedIndex, 1);
+        }
+    }
+    cancelLike(sauceId, userId) {
+        const sauce = this.saucesRepository.getOneSauce(sauceId);
+        if (sauce.userLiked.includes(userId)) {
+            sauce.likes -= 1;
+            const userLikedIndex = sauce.userLiked.findIndex( userLiked => userLiked == userId);
+            sauce.userLiked.splice(userLikedIndex, 1);
+        }
+        if (sauce.userDisliked.includes(userId)) {
+            sauce.dislikes -= 1;
+            const userDislikedIndex = sauce.userDisliked.findIndex( userDisliked => userDisliked == userId);
+            sauce.userDisliked.splice(userDislikedIndex, 1);
+        }
     }
 }
-
-module.exports = GetSauces;
+module.exports = GetSaucesService;
