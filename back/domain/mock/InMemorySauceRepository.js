@@ -2,11 +2,22 @@ class InMemorySauceRepository {
     constructor(sauces) {
         this.sauces = sauces;
     }
-    getSauces() {
+    getAllSauces() {
         return this.sauces;
     }
-    addNewSauce(newSauce) {
+    getOneSauce(sauceId) {
+        return this.sauces.find( sauce => sauce._id === sauceId);
+    }
+    saveSauce(newSauce) {
         this.sauces.push(newSauce);
+    }
+    updateSauce(sauce) {
+        this.deleteSauceData(sauce._id);
+        this.sauces.push(sauce);
+    }
+    deleteSauceData(sauceId) {
+        const sauceIndex = this.sauces.findIndex( sauce => sauce._id == sauceId);
+        this.sauces.splice(sauceIndex, 1);
     }
 }
 
