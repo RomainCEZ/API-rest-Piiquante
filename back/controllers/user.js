@@ -9,36 +9,29 @@ class UserRequestDTO {
     }
 }
 
-const placeholderUser = new User(
-    '123@123.fr',
-    "123"
-);
-placeholderUser.userId = 'placeholder userId'
-
-const userRepository = new InMemoryUserRepository([placeholderUser]);
+const placeholderUser = new User({
+    email: '123@123.fr',
+    password: '123'
+});
+const userRepository = new InMemoryUserRepository([]);
 const usersHandlingService = new UsersHandlingService(userRepository);
+usersHandlingService.createUser(placeholderUser)
+
 
 exports.signup = (req, res, next) => {
     const userSignupRequest = req.body;
     const newUserRequestDTO = new UserRequestDTO({
         ...userSignupRequest
     });
-    try {
-        usersHandlingService.createUser(newUserRequestDTO);
-        res.status(201).json({
+    usersHandlingService.createUser(newUserRequestDTO)
+        .then( () => res.status(201).json({
             message: 'New user created !'
-        });
-    } catch (error) {
-        res.status(500).json(error);
-    }
+        })).catch( error => res.status(500).json(error));
 }
 
 exports.login = (req, res, next) => {
-    try {
-        const userLoginRequest = req.body;
-        const userLogin = usersHandlingService.createLoginSession(userLoginRequest);
-        res.status(200).json(userLogin);    
-    } catch (error) {
-        res.status(401).json(error);
-    }
+    const userLoginRequest = req.body;
+    usersHandlingService.createLoginSession(userLoginRequest)
+        .then( userLogin => res.status(200).json(userLogin))
+        .catch( error => res.status(401).json(error));
 }
