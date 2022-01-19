@@ -1,4 +1,3 @@
-const Sauce = require('./Sauce');
 const fs = require('fs');
 
 class GetSaucesService {
@@ -9,29 +8,32 @@ class GetSaucesService {
         return this.saucesRepository.getAllSauces();
     }
     getOneSauce(sauceId) {
-        return this.saucesRepository.getOneSauce(sauceId);
+        const sauce =  this.saucesRepository.getOneSauce(sauceId);
+        if (!sauce) {
+            throw 'Sauce not found !';
+        }
     }
     createSauce(sauce) {
         this.saucesRepository.saveSauce(sauce);
     }
     updateSauce(updatedSauce) {
         if (updatedSauce.imageFileName) {
-            const previousFileName = sauceToUpdate.imageUrl.split('/images/')[1]
+            const previousFileName = sauceToUpdate.imageUrl.split('/images/')[1];
             fs.unlink(`./images/${previousFileName}`, (err) => {
                 if (err) {
-                    return
+                    return;
                 }
             })
-            sauceToUpdate.imageUrl = `http://localhost:3000/images/${updatedSauce.imageFileName}`
+            sauceToUpdate.imageUrl = `http://localhost:3000/images/${updatedSauce.imageFileName}`;
         }
         this.saucesRepository.updateSauce(updatedSauce);
     }
     deleteSauce(sauceId) { 
         const imageUrl = this.saucesRepository.getOneSauce(sauceId).imageUrl;
-        const fileName = imageUrl.split('/images/')[1]
+        const fileName = imageUrl.split('/images/')[1];
         fs.unlink(`./images/${fileName}`, (err) => {
             if (err) {
-                return
+                return;
             }
         })
         this.saucesRepository.deleteSauceData(sauceId);
