@@ -12,6 +12,7 @@ class GetSaucesService {
         if (!sauce) {
             throw 'Sauce not found !';
         }
+        return sauce;
     }
     createSauce(sauce) {
         this.saucesRepository.saveSauce(sauce);
