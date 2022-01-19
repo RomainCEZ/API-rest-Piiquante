@@ -70,6 +70,10 @@ exports.updateSauce = (req, res, next) => {
 
 exports.deleteSauce = (req, res, next) => {
     try {
+        const sauce = getSaucesService.getOneSauce(req.params.id);
+        if (req.auth.decodedUserId !== sauce.userId) {
+            throw 'Unauthorized request !'
+        }
         getSaucesService.deleteSauce(req.params.id);
         res.status(200).json({ message: `Sauce ${req.params.id} deleted !` });
     } catch (error) {
