@@ -1,6 +1,7 @@
 const User = require('./User');
 const UserPassword = require('./UserPassword');
 const TokenService = require('./TokenService');
+const bcrypt = require('bcrypt');
 
 class UsersHandlingService {
     constructor(usersRepository) {
@@ -9,24 +10,24 @@ class UsersHandlingService {
     getOneUser(email) { 
         return this.usersRepository.getOneUser(email);
     }
-    async createUser(user) {
+    createUser(user) {
         const newUser = new User({email: user.email, password: new UserPassword(user.password).password});
-        console.log(newUser)
         this.usersRepository.saveUser(newUser);
     }
-    createLoginSession(user) {
-        const newUser = this.getOneUser(user.email);
-        this.verifyPassword(user.password, user.password);
+    async createLoginSession(user) {
+        const userData = this.getOneUser(user.email);
+
+        this.verifyPassword(user.password, userData.password);
         return {
-            userId: newUser.userId,
-            token: TokenService.createUserToken(newUser.userId)
+            userId: userData.userId,
+            token: TokenService.createUserToken(userData.userId)
         };
     }
-    verifyPassword(userDTOPassword, userPassword) {
-        if (userDTOPassword !== userPassword) 
-        {
+    verifyPassword(userPassword, userPasswordHash) {
+        if (!bcrypt.compareSync(userPassword, userPasswordHash)) {
             throw 'Password invalid !';
         }
+        return true;
     }
 }
 module.exports = UsersHandlingService;
