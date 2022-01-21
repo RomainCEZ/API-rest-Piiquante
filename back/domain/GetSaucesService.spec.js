@@ -3,27 +3,30 @@ const Sauce = require('./Sauce');
 const InMemorySauceRepository = require('./mock/InMemorySauceRepository');
 
 describe('GetSaucesService', () => {
-    it('Should return an empty list of sauces', () => {
+    it('Should return an empty list of sauces', async () => {
         const sauceRepository = new InMemorySauceRepository([]);
         const getSaucesService = new GetSaucesService(sauceRepository);
-        expect(getSaucesService.getAllSauces()).toEqual([]);
+        const sauces = await getSaucesService.getAllSauces();
+        expect(sauces).toEqual([]);
     })
-    it('Should return a list of one sauce', () => {
+    it('Should return a list of one sauce', async () => {
         const expectedSauce = new Sauce('sauce1');
         const sauceRepository = new InMemorySauceRepository([expectedSauce]);
         const getSaucesService = new GetSaucesService(sauceRepository);
-        expect(getSaucesService.getAllSauces()).toEqual([expectedSauce]);
+        const sauces = await getSaucesService.getAllSauces();
+        expect(sauces).toEqual([expectedSauce]);
     })
-    it('Should return a specific sauce from a list of sauces', () => {
+    it('Should return a specific sauce from a list of sauces', async () => {
         const sauceIWant = new Sauce({id: 'id1', userId: 'userId', name: 'name'});
         const secondSauce = new Sauce({id: 'id2', userId: 'userId2', name: 'name2'});
         const sauceRepository = new InMemorySauceRepository([sauceIWant, secondSauce]);
         const getSaucesService = new GetSaucesService(sauceRepository);
-        expect(getSaucesService.getOneSauce('id1')).toEqual(sauceIWant);
+        const sauce = await getSaucesService.getOneSauce('id1');
+        expect(sauce).toEqual(sauceIWant);
     })
 
 //  createSauce(newSauce)
-    it('Should add a new sauce and return a list of all sauces including new sauce', () => {
+    it('Should add a new sauce and return a list of all sauces including new sauce', async () => {
         const originalSauce = new Sauce({id: 'id1', userId: 'userId', name: 'name', description: 'description', manufacturer: 'manufacturer', mainPepper: 'mainPepper', heat: 2});
         const newSauce = new Sauce({
             id: 'id2', 
@@ -34,13 +37,13 @@ describe('GetSaucesService', () => {
             mainPepper: 'mainPepper', 
             heat: 5
         });
-
         const sauceRepository = new InMemorySauceRepository([originalSauce]);
         const getSaucesService = new GetSaucesService(sauceRepository);
         getSaucesService.createSauce(newSauce);
-        expect(getSaucesService.getAllSauces()).toEqual([originalSauce, newSauce]);
+        const sauces = await getSaucesService.getAllSauces();
+        expect(sauces).toEqual([originalSauce, newSauce]);
     })
-    it('Should add a new sauce and return a list containing this sauce', () => {
+    it('Should add a new sauce and return a list containing this sauce', async () => {
         const originalSauce = new Sauce({id: 'id1', userId: 'userId', name: 'name', description: 'description', manufacturer: 'manufacturer', mainPepper: 'mainPepper', heat: 2});
         const newSauce = new Sauce({
             id: 'id2',
@@ -54,158 +57,176 @@ describe('GetSaucesService', () => {
         const sauceRepository = new InMemorySauceRepository([originalSauce]);
         const getSaucesService = new GetSaucesService(sauceRepository);
         getSaucesService.createSauce(newSauce);
-        expect(getSaucesService.getOneSauce('id2')).toBe(newSauce);
+        const sauce = await getSaucesService.getOneSauce('id2');
+        expect(sauce).toBe(newSauce);
     })
 
 //  updateSauce(updatedSauceDTO, sauceId) 
-    it('Should update the original sauce with the new SauceDTO params', () => {
+    it('Should update the original sauce with the new SauceDTO params', async () => {
         const originalSauce = new Sauce({id: 'id1', userId: 'userId', name: 'name', description: 'description', manufacturer: 'manufacturer', mainPepper: 'mainPepper', heat: 2});
         const updatedSauce = new Sauce({id: 'id1', userId: 'userId', name: 'name2', description: 'description2', manufacturer: 'manufacturer2', mainPepper: 'mainPepper2', heat: 2});
         const sauceRepository = new InMemorySauceRepository([originalSauce]);
         const getSaucesService = new GetSaucesService(sauceRepository);
         getSaucesService.updateSauce(updatedSauce);
-        expect(getSaucesService.getAllSauces()).toEqual([updatedSauce]);
+        const sauces = await getSaucesService.getAllSauces();
+        expect(sauces).toEqual([updatedSauce]);
     })
 
 //  deleteSauce(sauceId)
-    it('Should delete sauce1', () => {
+    it('Should delete sauce1', async () => {
         const sauce1 = new Sauce({id: 'id1'});
         const sauce2 = new Sauce({id: 'id2'});
         const sauce3 = new Sauce({id: 'id3'});
         const sauceRepository = new InMemorySauceRepository([sauce1, sauce2, sauce3]);
         const getSaucesService = new GetSaucesService(sauceRepository);
         getSaucesService.deleteSauce('id1');
-        expect(getSaucesService.getAllSauces()).toEqual([sauce2, sauce3]);
+        const sauces = await getSaucesService.getAllSauces();
+        expect(sauces).toEqual([sauce2, sauce3]);
     })
-    it('Should delete sauce2', () => {
+    it('Should delete sauce2', async () => {
         const sauce1 = new Sauce({id: 'id1'});
         const sauce2 = new Sauce({id: 'id2'});
         const sauce3 = new Sauce({id: 'id3'});
         const sauceRepository = new InMemorySauceRepository([sauce1, sauce2, sauce3]);
         const getSaucesService = new GetSaucesService(sauceRepository);
         getSaucesService.deleteSauce('id2');
-        expect(getSaucesService.getAllSauces()).toEqual([sauce1, sauce3]);
+        const sauces = await getSaucesService.getAllSauces();
+        expect(sauces).toEqual([sauce1, sauce3]);
     })
     
 //  likeSauce(sauceId, userId)
-    it('Should add 1 like', () => {
+    it('Should add 1 like', async () => {
         const sauce = new Sauce({id: 'id'});
         const sauceRepository = new InMemorySauceRepository([sauce]);
         const getSaucesService = new GetSaucesService(sauceRepository);
         getSaucesService.likeSauce('id');
-        expect(getSaucesService.getOneSauce('id').likes).toEqual(1);
+        const s = await getSaucesService.getOneSauce('id');
+        expect(s.likes).toEqual(1);
     })
-    it('Should add userId to userLiked', () => {
+    it('Should add userId to usersLiked', async () => {
         const sauce = new Sauce({id: 'id', userId: 'userId'});
         const sauceRepository = new InMemorySauceRepository([sauce]);
         const getSaucesService = new GetSaucesService(sauceRepository);
         getSaucesService.likeSauce('id', 'userId');
-        expect(getSaucesService.getOneSauce('id').userLiked).toEqual(['userId']);
+        const s = await getSaucesService.getOneSauce('id');
+        expect(s.usersLiked).toEqual(['userId']);
     })
-    it('Should remove 1 dislike if userId is already in userDisliked', () => {
+    it('Should remove 1 dislike if userId is already in usersDisliked', async () => {
         const sauce = new Sauce({id: 'id', userId: 'userId'});
         sauce.dislikes = 1;
-        sauce.userDisliked = ['userId'];
+        sauce.usersDisliked = ['userId'];
         const sauceRepository = new InMemorySauceRepository([sauce]);
         const getSaucesService = new GetSaucesService(sauceRepository);
         getSaucesService.likeSauce('id', 'userId');
-        expect(getSaucesService.getOneSauce('id').dislikes).toEqual(0);
+        const s = await getSaucesService.getOneSauce('id');
+        expect(s.dislikes).toEqual(0);
     })
-    it('Should remove userId from userDisliked it is already in userDisiked', () => {
-        const sauce = new Sauce({id: 'id', userId: 'userId'});
-        sauce.userDisliked = ['userId'];
+    it('Should remove userId from usersDisliked if it is already in usersDisliked', async () => {
+        const sauce = new Sauce({id: 'id', userId: 'userId', usersDisliked: ['userId']});
         const sauceRepository = new InMemorySauceRepository([sauce]);
         const getSaucesService = new GetSaucesService(sauceRepository);
         getSaucesService.likeSauce('id', 'userId');
-        expect(getSaucesService.getOneSauce('id').userDisliked).toEqual([]);
+        const s = await getSaucesService.getOneSauce('id');
+        expect(s.usersDisliked).toEqual([]);
     })
-    it('Should remove userId 3 from userDisliked it is already in userDisiked', () => {
-        const sauce = new Sauce({id: 'id', userId: 'userId'});
-        sauce.userDisliked = ['userId 1', 'userId 2', 'userId 3'];
+    it('Should remove userId 3 from usersDisliked if it is already in usersDisliked', async () => {
+        const sauce = new Sauce({id: 'id', userId: 'userId', usersDisliked: ['userId 1', 'userId 2', 'userId 3']});
         const sauceRepository = new InMemorySauceRepository([sauce]);
         const getSaucesService = new GetSaucesService(sauceRepository);
         getSaucesService.likeSauce('id', 'userId 3');
-        expect(getSaucesService.getOneSauce('id').userDisliked).toEqual(['userId 1', 'userId 2']);
+        const s = await getSaucesService.getOneSauce('id');
+        expect(s.usersDisliked).toEqual(['userId 1', 'userId 2']);
     })
 
 //  dislikeSauce(sauceId, userId)
-    it('Should add 1 dislike', () => {
+    it('Should add 1 dislike', async () => {
         const sauce = new Sauce({id: 'id', userId: 'userId'});
         const sauceRepository = new InMemorySauceRepository([sauce]);
         const getSaucesService = new GetSaucesService(sauceRepository);
         getSaucesService.dislikeSauce('id');
-        expect(getSaucesService.getOneSauce('id').dislikes).toEqual(1);
+        const s = await getSaucesService.getOneSauce('id')
+        expect(s.dislikes).toEqual(1);
     })
-    it('Should add userId to userDisiked', () => {
+    it('Should add userId to userDisiked', async () => {
         const sauce = new Sauce({id: 'id', userId: 'userId'});
         const sauceRepository = new InMemorySauceRepository([sauce]);
         const getSaucesService = new GetSaucesService(sauceRepository);
         getSaucesService.dislikeSauce('id', 'userId');
-        expect(getSaucesService.getOneSauce('id').userDisliked).toEqual(['userId']);
+        const s = await getSaucesService.getOneSauce('id');
+        expect(s.usersDisliked).toEqual(['userId']);
     })
-    it('Should remove 1 like if userId is already in userLiked', () => {
-        const sauce = new Sauce({id: 'id', userId: 'userId', likes: 1, userLiked: ['userId']});
+    it('Should remove 1 like if userId is already in usersLiked', async () => {
+        const sauce = new Sauce({id: 'id', userId: 'userId', likes: 1, usersLiked: ['userId']});
         const sauceRepository = new InMemorySauceRepository([sauce]);
         const getSaucesService = new GetSaucesService(sauceRepository);
         getSaucesService.dislikeSauce('id', 'userId');
-        expect(getSaucesService.getOneSauce('id').likes).toEqual(0);
+        const s = await getSaucesService.getOneSauce('id');
+        expect(s.likes).toEqual(0);
     })
-    it('Should remove userId from userLiked it is already in userLiked', () => {
-        const sauce = new Sauce({id: 'id', userId: 'userId', userDisliked: ['userId']});
+    it('Should remove userId from usersLiked it is already in usersLiked', async () => {
+        const sauce = new Sauce({id: 'id', userId: 'userId', usersDisliked: ['userId']});
         const sauceRepository = new InMemorySauceRepository([sauce]);
         const getSaucesService = new GetSaucesService(sauceRepository);
         getSaucesService.dislikeSauce('id', 'userId');
-        expect(getSaucesService.getOneSauce('id').userLiked).toEqual([]);
+        const s = await getSaucesService.getOneSauce('id');
+        expect(s.usersLiked).toEqual([]);
     })
-    it('Should remove userId 2 from userLiked it is already in userLiked', () => {
-        const sauce = new Sauce({id: 'id', userId: 'userId', userLiked: ['userId 1', 'userId 2', 'userId 3']});
+    it('Should remove userId 2 from usersLiked it is already in usersLiked', async () => {
+        const sauce = new Sauce({id: 'id', userId: 'userId', usersLiked: ['userId 1', 'userId 2', 'userId 3']});
         const sauceRepository = new InMemorySauceRepository([sauce]);
         const getSaucesService = new GetSaucesService(sauceRepository);
         getSaucesService.dislikeSauce('id', 'userId 2');
-        expect(getSaucesService.getOneSauce('id').userLiked).toEqual(['userId 1', 'userId 3']);
+        const s = await getSaucesService.getOneSauce('id');
+        expect(s.usersLiked).toEqual(['userId 1', 'userId 3']);
     })
 
 //  cancelLike
-    it('Should remove 1 like if userId is already in userLiked', () => {
-        const sauce = new Sauce({id: 'id', userId: 'userId', likes: 1, userLiked: ['userId']});
+    it('Should remove 1 like if userId is already in usersLiked', async () => {
+        const sauce = new Sauce({id: 'id', userId: 'userId', likes: 1, usersLiked: ['userId']});
         const sauceRepository = new InMemorySauceRepository([sauce]);
         const getSaucesService = new GetSaucesService(sauceRepository);
         getSaucesService.cancelLike('id', 'userId');
-        expect(getSaucesService.getOneSauce('id').likes).toEqual(0);
+        const s = await getSaucesService.getOneSauce('id');
+        expect(s.likes).toEqual(0);
     })
-    it('Should remove userId from userLiked it is already in userLiked', () => {
-        const sauce = new Sauce({id: 'id', userId: 'userId', likes: 1, userLiked: ['userId']});
+    it('Should remove userId from usersLiked it is already in usersLiked', async () => {
+        const sauce = new Sauce({id: 'id', userId: 'userId', likes: 1, usersLiked: ['userId']});
         const sauceRepository = new InMemorySauceRepository([sauce]);
         const getSaucesService = new GetSaucesService(sauceRepository);
         getSaucesService.cancelLike('id', 'userId');
-        expect(getSaucesService.getOneSauce('id').userLiked).toEqual([]);
+        const s = await getSaucesService.getOneSauce('id');
+        expect(s.usersLiked).toEqual([]);
     })
-    it('Should remove userId 2 from userLiked it is already in userLiked', () => {
-        const sauce = new Sauce({id: 'id', userId: 'userId', userLiked: ['userId 1', 'userId 2', 'userId 3']});
+    it('Should remove userId 2 from usersLiked it is already in usersLiked', async () => {
+        const sauce = new Sauce({id: 'id', userId: 'userId', usersLiked: ['userId 1', 'userId 2', 'userId 3']});
         const sauceRepository = new InMemorySauceRepository([sauce]);
         const getSaucesService = new GetSaucesService(sauceRepository);
         getSaucesService.cancelLike('id', 'userId 2');
-        expect(getSaucesService.getOneSauce('id').userLiked).toEqual(['userId 1', 'userId 3']);
+        const s = await getSaucesService.getOneSauce('id');
+        expect(s.usersLiked).toEqual(['userId 1', 'userId 3']);
     })
-    it('Should remove 1 dislike if userId is already in userDisliked', () => {
-        const sauce = new Sauce({id: 'id', userId: 'userId', dislikes: 1, userDisliked: ['userId']});
+    it('Should remove 1 dislike if userId is already in usersDisliked', async () => {
+        const sauce = new Sauce({id: 'id', userId: 'userId', dislikes: 1, usersDisliked: ['userId']});
         const sauceRepository = new InMemorySauceRepository([sauce]);
         const getSaucesService = new GetSaucesService(sauceRepository);
         getSaucesService.cancelLike('id', 'userId');
-        expect(getSaucesService.getOneSauce('id').dislikes).toEqual(0);
+        const s = await getSaucesService.getOneSauce('id')
+        expect(s.dislikes).toEqual(0);
     })
-    it('Should remove userId from userDisliked it is already in userDisliked', () => {
-        const sauce = new Sauce({id: 'id', userId: 'userId', likes: 1, userDisliked: ['userId']});
+    it('Should remove userId from usersDisliked it is already in usersDisliked', async () => {
+        const sauce = new Sauce({id: 'id', userId: 'userId', likes: 1, usersDisliked: ['userId']});
         const sauceRepository = new InMemorySauceRepository([sauce]);
         const getSaucesService = new GetSaucesService(sauceRepository);
         getSaucesService.cancelLike('id', 'userId');
-        expect(getSaucesService.getOneSauce('id').userDisliked).toEqual([]);
+        const s = await getSaucesService.getOneSauce('id');
+        expect(s.usersDisliked).toEqual([]);
     })
-    it('Should remove userId 3 from userDisiked it is already in userDisiked', () => {
-        const sauce = new Sauce({id: 'id', userId: 'userId', userDisliked: ['userId 1', 'userId 2', 'userId 3']});
+    it('Should remove userId 3 from userDisiked it is already in userDisiked', async () => {
+        const sauce = new Sauce({id: 'id', userId: 'userId', usersDisliked: ['userId 1', 'userId 2', 'userId 3']});
         const sauceRepository = new InMemorySauceRepository([sauce]);
         const getSaucesService = new GetSaucesService(sauceRepository);
         getSaucesService.cancelLike('id', 'userId 3');
-        expect(getSaucesService.getOneSauce('id').userDisliked).toEqual(['userId 1', 'userId 2']);
+        const s = await getSaucesService.getOneSauce('id');
+        expect(s.usersDisliked).toEqual(['userId 1', 'userId 2']);
     })
 })

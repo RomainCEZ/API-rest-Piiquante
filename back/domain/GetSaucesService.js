@@ -4,11 +4,11 @@ class GetSaucesService {
     constructor(saucesRepository) {
         this.saucesRepository = saucesRepository;
     }
-    getAllSauces() {
-        return this.saucesRepository.getAllSauces();
+    async getAllSauces() {
+        return await this.saucesRepository.getAllSauces();
     }
-    getOneSauce(sauceId) {
-        const sauce =  this.saucesRepository.getOneSauce(sauceId);
+    async getOneSauce(sauceId) {
+        const sauce =  await this.saucesRepository.getOneSauce(sauceId);
         if (!sauce) {
             throw 'Sauce not found !';
         }
@@ -17,7 +17,7 @@ class GetSaucesService {
     createSauce(sauce) {
         this.saucesRepository.saveSauce(sauce);
     }
-    updateSauce(updatedSauce) {
+    async updateSauce(updatedSauce) {
         if (updatedSauce.imageFileName) {
             const previousFileName = sauceToUpdate.imageUrl.split('/images/')[1];
             fs.unlink(`./images/${previousFileName}`, (err) => {
@@ -26,12 +26,14 @@ class GetSaucesService {
                 }
             })
             sauceToUpdate.imageUrl = `http://localhost:3000/images/${updatedSauce.imageFileName}`;
+        } else {
+
         }
         this.saucesRepository.updateSauce(updatedSauce);
     }
-    deleteSauce(sauceId) { 
-        const imageUrl = this.saucesRepository.getOneSauce(sauceId).imageUrl;
-        const fileName = imageUrl.split('/images/')[1];
+    async deleteSauce(sauceId) { 
+        const sauce = await this.saucesRepository.getOneSauce(sauceId);
+        const fileName = sauce.imageUrl.split('/images/')[1];
         fs.unlink(`./images/${fileName}`, (err) => {
             if (err) {
                 return;
@@ -39,53 +41,56 @@ class GetSaucesService {
         })
         this.saucesRepository.deleteSauceData(sauceId);
     }
-    handleLikes(sauceId, userId, like) {
+    async handleLikes(sauceId, userId, like) {
         if (like === 1) {
-            this.likeSauce(sauceId, userId);
+            await this.likeSauce(sauceId, userId);
         }
         if (like === -1) {
-            this.dislikeSauce(sauceId, userId);
+            await this.dislikeSauce(sauceId, userId);
         }
         if (like === 0) {
-            this.cancelLike(sauceId, userId);
+            await this.cancelLike(sauceId, userId);
         }
     }
-    likeSauce(sauceId, userId) {
-        const sauce = this.saucesRepository.getOneSauce(sauceId);
-        if (!sauce.userLiked.includes(userId)) {
+    async likeSauce(sauceId, userId) {
+        const sauce = await this.saucesRepository.getOneSauce(sauceId);
+        if (!sauce.usersLiked.includes(userId)) {
             sauce.likes += 1;
-            sauce.userLiked.push(userId);
+            sauce.usersLiked.push(userId);
         }
-        if (sauce.userDisliked.includes(userId)) {
+        if (sauce.usersDisliked.includes(userId)) {
             sauce.dislikes -= 1;
-            const userDislikedIndex = sauce.userDisliked.findIndex( userDisliked => userDisliked == userId);
-            sauce.userDisliked.splice(userDislikedIndex, 1);
+            const usersDislikedIndex = sauce.usersDisliked.findIndex( userDisliked => userDisliked == userId);
+            sauce.usersDisliked.splice(usersDislikedIndex, 1);
         }
+        this.saucesRepository.updateLikes(sauce);
     }
-    dislikeSauce(sauceId, userId) {
-        const sauce = this.saucesRepository.getOneSauce(sauceId);
-        if (!sauce.userDisliked.includes(userId)) {
+    async dislikeSauce(sauceId, userId) {
+        const sauce = await this.saucesRepository.getOneSauce(sauceId);
+        if (!sauce.usersDisliked.includes(userId)) {
             sauce.dislikes += 1;
-            sauce.userDisliked.push(userId);
+            sauce.usersDisliked.push(userId);
         }
-        if (sauce.userLiked.includes(userId)) {
+        if (sauce.usersLiked.includes(userId)) {
             sauce.likes -= 1;
-            const userLikedIndex = sauce.userLiked.findIndex( userDisliked => userDisliked == userId);
-            sauce.userLiked.splice(userLikedIndex, 1);
+            const usersLikedIndex = sauce.usersLiked.findIndex( usersLiked => usersLiked == userId);
+            sauce.usersLiked.splice(usersLikedIndex, 1);
         }
+        this.saucesRepository.updateLikes(sauce);
     }
-    cancelLike(sauceId, userId) {
-        const sauce = this.saucesRepository.getOneSauce(sauceId);
-        if (sauce.userLiked.includes(userId)) {
+    async cancelLike(sauceId, userId) {
+        const sauce = await this.saucesRepository.getOneSauce(sauceId);
+        if (sauce.usersLiked.includes(userId)) {
             sauce.likes -= 1;
-            const userLikedIndex = sauce.userLiked.findIndex( userLiked => userLiked == userId);
-            sauce.userLiked.splice(userLikedIndex, 1);
+            const usersLikedIndex = sauce.usersLiked.findIndex( usersLiked => usersLiked == userId);
+            sauce.usersLiked.splice(usersLikedIndex, 1);
         }
-        if (sauce.userDisliked.includes(userId)) {
+        if (sauce.usersDisliked.includes(userId)) {
             sauce.dislikes -= 1;
-            const userDislikedIndex = sauce.userDisliked.findIndex( userDisliked => userDisliked == userId);
-            sauce.userDisliked.splice(userDislikedIndex, 1);
+            const usersDislikedIndex = sauce.usersDisliked.findIndex( usersDisliked => usersDisliked == userId);
+            sauce.usersDisliked.splice(usersDislikedIndex, 1);
         }
+        this.saucesRepository.updateLikes(sauce);
     }
 }
 module.exports = GetSaucesService;

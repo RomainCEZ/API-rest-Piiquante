@@ -7,27 +7,27 @@ class UsersHandlingService {
     constructor(usersRepository) {
         this.usersRepository = usersRepository;
     }
-    getOneUser(email) { 
-        return this.usersRepository.getOneUser(email);
+    async getOneUser(email) { 
+        return await this.usersRepository.getOneUser(email);
     }
     createUser(user) {
         const newUser = new User({email: user.email, password: new UserPassword(user.password).password});
         this.usersRepository.saveUser(newUser);
     }
     async createLoginSession(user) {
-        const userData = this.getOneUser(user.email);
-
-        this.verifyPassword(user.password, userData.password);
+        const userData = await this.getOneUser(user.email);
+        await this.verifyPassword(user.password, userData.password);
         return {
-            userId: userData.userId,
-            token: TokenService.createUserToken(userData.userId)
+            userId: await userData._id,
+            token: TokenService.createUserToken(userData._id)
         };
     }
-    verifyPassword(userPassword, userPasswordHash) {
-        if (!bcrypt.compareSync(userPassword, userPasswordHash)) {
+    async verifyPassword(userPassword, userPasswordHash) {
+        const valid = await bcrypt.compare(userPassword, userPasswordHash);
+        if (!valid) {
             throw 'Password invalid !';
         }
-        return true;
+        return valid;
     }
 }
 module.exports = UsersHandlingService;
