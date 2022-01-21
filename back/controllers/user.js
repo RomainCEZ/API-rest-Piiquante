@@ -1,5 +1,7 @@
 const UsersHandlingService = require('../domain/UsersHandlingService');
-const User = require('../domain/User');
+// const User = require('../domain/User');
+const User = require('../models/User');
+const MongoDBAdapter = require('../adapter/MongoDBAdapter');
 const InMemoryUserRepository = require('../domain/mock/InMemoryUserRepository');
 
 class UserRequestDTO {
@@ -9,13 +11,15 @@ class UserRequestDTO {
     }
 }
 
-const placeholderUser = new User({
-    email: '123@123.fr',
-    password: '123'
-});
-const userRepository = new InMemoryUserRepository([]);
+// const placeholderUser = new User({
+//     email: '123@123.fr',
+//     password: '123'
+// });
+// const userRepository = new InMemoryUserRepository([]);
+
+const userRepository = new MongoDBAdapter();
 const usersHandlingService = new UsersHandlingService(userRepository);
-usersHandlingService.createUser(placeholderUser)
+// usersHandlingService.createUser(placeholderUser)
 
 
 exports.signup = (req, res, next) => {
@@ -23,15 +27,21 @@ exports.signup = (req, res, next) => {
     const newUserRequestDTO = new UserRequestDTO({
         ...userSignupRequest
     });
-    usersHandlingService.createUser(newUserRequestDTO)
-        .then( () => res.status(201).json({
-            message: 'New user created !'
-        })).catch( error => res.status(500).json(error));
+    try {
+        usersHandlingService.createUser(newUserRequestDTO);
+        res.status(201).json({ message: 'New user created !' });
+    }
+    catch {
+        res.status(500).json({ error });
+    }
 }
 
-exports.login = (req, res, next) => {
-    const userLoginRequest = req.body;
-    usersHandlingService.createLoginSession(userLoginRequest)
-        .then( userLogin => res.status(200).json(userLogin))
-        .catch( error => res.status(401).json(error));
+exports.login = async (req, res, next) => {
+    try {
+        const userLoginRequest = req.body;
+        const userLogin = await usersHandlingService.createLoginSession(userLoginRequest)
+        res.status(200).json(userLogin)
+    } catch (error) {
+        res.status(401).json({ error })
+    }
 }
