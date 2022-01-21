@@ -1,5 +1,5 @@
 const UsersHandlingService = require('../domain/UsersHandlingService');
-// const User = require('../domain/User');
+const User = require('../domain/User');
 const User = require('../models/User');
 const MongoDBAdapter = require('../adapter/MongoDBAdapter');
 const InMemoryUserRepository = require('../domain/mock/InMemoryUserRepository');
@@ -15,9 +15,9 @@ class UserRequestDTO {
 //     email: '123@123.fr',
 //     password: '123'
 // });
-// const userRepository = new InMemoryUserRepository([]);
+const userRepository = new InMemoryUserRepository([]);
+// const userRepository = new MongoDBAdapter();
 
-const userRepository = new MongoDBAdapter();
 const usersHandlingService = new UsersHandlingService(userRepository);
 // usersHandlingService.createUser(placeholderUser)
 
