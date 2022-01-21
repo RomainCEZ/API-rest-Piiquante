@@ -15,23 +15,24 @@ describe('UsersHandlingService', () => {
         const user = await usersHandlingService.getOneUser('email');
         expect(user).toEqual(expectedUser);
     })
-    it('Should create a new user', () => {
+    it('Should create a new user', async () => {
         const newUser = new User({email: 'email', password: 'password'})
         const userRepository = new InMemoryUserRepository([]);
         const usersHandlingService = new UsersHandlingService(userRepository);
-        usersHandlingService.createUser(newUser);
+        await usersHandlingService.createUser(newUser);
         expect(usersHandlingService.getOneUser('email')).toBeDefined();
     })
     it('Should create a userId', async () => {
         const newUser = new User({email: 'email', password: 'password'})
         const userRepository = new InMemoryUserRepository([]);
         const usersHandlingService = new UsersHandlingService(userRepository);
-        usersHandlingService.createUser(newUser);
+        await usersHandlingService.createUser(newUser);
         const user = await usersHandlingService.getOneUser('email')
         expect(user.userId).toBeDefined();
     })
     it('Should return an object containing a user Id and a token', async () => {
-        const userData = new User({email: 'email', password: new UserPassword('password').password});
+        const password = await UserPassword.hashPassword('password');
+        const userData = new User({email: 'email', password: password.hash });
         const userRepository = new InMemoryUserRepository([userData]);
         const usersHandlingService = new UsersHandlingService(userRepository);
         const expectedLoginInfo = {
@@ -46,7 +47,7 @@ describe('UsersHandlingService', () => {
         const newUser = new User({email: 'email', password: 'password'});
         const userRepository = new InMemoryUserRepository([]);
         const usersHandlingService = new UsersHandlingService(userRepository);
-        usersHandlingService.createUser(newUser);
+        await usersHandlingService.createUser(newUser);
         const user = await usersHandlingService.getOneUser('email');
         expect(user.password).toBeDefined();
     })
@@ -54,7 +55,7 @@ describe('UsersHandlingService', () => {
         const newUser = new User({email: 'email', password: 'testpassword'});
         const userRepository = new InMemoryUserRepository([]);
         const usersHandlingService = new UsersHandlingService(userRepository);
-        usersHandlingService.createUser(newUser);
+        await usersHandlingService.createUser(newUser);
         const user = await usersHandlingService.getOneUser('email');
         expect(usersHandlingService.verifyPassword('testpassword', user.password)).toBeTruthy();
     })
