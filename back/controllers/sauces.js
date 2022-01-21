@@ -1,34 +1,37 @@
 const GetSaucesService = require('../domain/GetSaucesService');
 const Sauce = require('../domain/Sauce');
+const MongoDBAdapter = require('../adapter/MongoDBAdapter');
 const InMemorySauceRepository = require('../domain/mock/InMemorySauceRepository');
 
-const placeholderSauce = new Sauce({
-    id: 'id',
-    userId: 'cannot be edited',
-    name: 'Softest sauce',
-    description: 'The softest of all sauces',
-    manufacturer: 'Ginger',
-    mainPepper: 'Lots of fur',
-    heat: 1,
-    imageFileName: 'Ginger_Sauce.jpeg',
-    likes: 1,
-    userLiked: ['cannot be edited']
-});
-const sauceRepository = new InMemorySauceRepository([placeholderSauce]);
+// const placeholderSauce = new Sauce({
+//     id: 'id',
+//     userId: 'cannot be edited',
+//     name: 'Softest sauce',
+//     description: 'The softest of all sauces',
+//     manufacturer: 'Ginger',
+//     mainPepper: 'Lots of fur',
+//     heat: 1,
+//     imageFileName: 'Ginger_Sauce.jpeg',
+//     likes: 1,
+//     userLiked: ['cannot be edited']
+// });
+// const sauceRepository = new InMemorySauceRepository([placeholderSauce]);
+
+const sauceRepository = new MongoDBAdapter();
 const getSaucesService = new GetSaucesService(sauceRepository);
 
-exports.getAllSauces = (req, res, next) => {
+exports.getAllSauces = async (req, res, next) => {
     try {
-        const allSauces = getSaucesService.getAllSauces();
+        const allSauces = await getSaucesService.getAllSauces();
         res.status(200).json(allSauces);
     } catch (error) {
         res.status(500).json(error);
     }
 }
 
-exports.getOneSauce = (req, res, next) => {
+exports.getOneSauce = async (req, res, next) => {
     try {
-        const oneSauce = getSaucesService.getOneSauce(req.params.id);
+        const oneSauce = await getSaucesService.getOneSauce(req.params.id);
         res.status(200).json(oneSauce);
     } catch (error) {
         res.status(404).json(error);
@@ -48,7 +51,7 @@ exports.postSauce = (req, res, next) => {
         res.status(500).json(error);
     }
 }
-exports.updateSauce = (req, res, next) => {
+exports.updateSauce = async (req, res, next) => {
     if (req.file) {
         const updatedSauceRequest = JSON.parse(req.body.sauce);
         const updatedSauce = new Sauce({
@@ -58,19 +61,22 @@ exports.updateSauce = (req, res, next) => {
         });
         getSaucesService.updateSauce(updatedSauce);
     } else {
+        const oldSauce = await getSaucesService.getOneSauce(req.params.id);
+        const imageFileName = oldSauce.imageUrl.split('/images/')[1];
         const updatedSauceRequest = req.body;
         const updatedSauce = new Sauce({
             id: req.params.id,
-            ...updatedSauceRequest
+            ...updatedSauceRequest,
+            imageFileName
         });
         getSaucesService.updateSauce(updatedSauce);
     }
     res.status(200).json({ message: 'Sauce updated !' });
 }
 
-exports.deleteSauce = (req, res, next) => {
+exports.deleteSauce = async (req, res, next) => {
     try {
-        const sauce = getSaucesService.getOneSauce(req.params.id);
+        const sauce = await getSaucesService.getOneSauce(req.params.id);
         if (req.auth.decodedUserId !== sauce.userId) {
             throw 'Unauthorized request !'
         }
