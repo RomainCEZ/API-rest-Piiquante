@@ -61,8 +61,8 @@ describe('GetSaucesService', () => {
         expect(sauce).toBe(newSauce);
     })
 
-//  updateSauce(updatedSauceDTO, sauceId) 
-    it('Should update the original sauce with the new SauceDTO params', async () => {
+//  updateSauce(updatedSauce) 
+    it('Should update the original sauce with the updatedSauce params', async () => {
         const originalSauce = new Sauce({id: 'id1', userId: 'userId', name: 'name', description: 'description', manufacturer: 'manufacturer', mainPepper: 'mainPepper', heat: 2});
         const updatedSauce = new Sauce({id: 'id1', userId: 'userId', name: 'name2', description: 'description2', manufacturer: 'manufacturer2', mainPepper: 'mainPepper2', heat: 2});
         const sauceRepository = new InMemorySauceRepository([originalSauce]);
@@ -70,6 +70,16 @@ describe('GetSaucesService', () => {
         getSaucesService.updateSauce(updatedSauce);
         const sauces = await getSaucesService.getAllSauces();
         expect(sauces).toEqual([updatedSauce]);
+    })
+    it('Should update the original sauce with the updatedSauce params while keeping original likes and dislikes', async () => {
+        const originalSauce = new Sauce({id: 'id1', userId: 'userId', name: 'name', description: 'description', manufacturer: 'manufacturer', mainPepper: 'mainPepper', heat: 2, likes: 4, usersLiked: ['userId'], dislikes: 1, usersDisliked: ['userId2']});
+        const updatedSauce = new Sauce({id: 'id1', userId: 'userId', name: 'name2', description: 'description2', manufacturer: 'manufacturer2', mainPepper: 'mainPepper2', heat: 4});
+        const sauceRepository = new InMemorySauceRepository([originalSauce]);
+        const getSaucesService = new GetSaucesService(sauceRepository);
+        getSaucesService.updateSauce(updatedSauce);
+        const sauces = await getSaucesService.getAllSauces();
+        const expextedSauce = new Sauce({id: 'id1', userId: 'userId', name: 'name2', description: 'description2', manufacturer: 'manufacturer2', mainPepper: 'mainPepper2', heat: 4, likes: 4, usersLiked: ['userId'], dislikes: 1, usersDisliked: ['userId2']});
+        expect(sauces).toEqual([expextedSauce]);
     })
 
 //  deleteSauce(sauceId)
