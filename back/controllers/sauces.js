@@ -3,21 +3,8 @@ const Sauce = require('../domain/Sauce');
 const MongoDBAdapter = require('../adapter/MongoDBAdapter');
 const InMemorySauceRepository = require('../domain/mock/InMemorySauceRepository');
 
-// const placeholderSauce = new Sauce({
-//     id: 'id',
-//     userId: 'cannot be edited',
-//     name: 'Softest sauce',
-//     description: 'The softest of all sauces',
-//     manufacturer: 'Ginger',
-//     mainPepper: 'Lots of fur',
-//     heat: 1,
-//     imageFileName: 'Ginger_Sauce.jpeg',
-//     likes: 1,
-//     userLiked: ['cannot be edited']
-// });
-// const sauceRepository = new InMemorySauceRepository([placeholderSauce]);
 
-const sauceRepository = new MongoDBAdapter();
+const sauceRepository = new InMemorySauceRepository();
 const getSaucesService = new GetSaucesService(sauceRepository);
 
 exports.getAllSauces = async (req, res, next) => {
@@ -29,9 +16,9 @@ exports.getAllSauces = async (req, res, next) => {
     }
 }
 
-exports.getOneSauce = async (req, res, next) => {
+exports.getSauceById = async (req, res, next) => {
     try {
-        const oneSauce = await getSaucesService.getOneSauce(req.params.id);
+        const oneSauce = await getSaucesService.getSauceById(req.params.id);
         res.status(200).json(oneSauce);
     } catch (error) {
         res.status(404).json(error);
@@ -61,14 +48,11 @@ exports.updateSauce = async (req, res, next) => {
         });
         getSaucesService.updateSauce(updatedSauce);
     } else {
-        const oldSauce = await getSaucesService.getOneSauce(req.params.id);
-        const imageFileName = oldSauce.imageUrl.split('/images/')[1];
         const updatedSauceRequest = req.body;
-        const updatedSauce = new Sauce({
+        const updatedSauce = {
             id: req.params.id,
-            ...updatedSauceRequest,
-            imageFileName
-        });
+            ...updatedSauceRequest
+        };
         getSaucesService.updateSauce(updatedSauce);
     }
     res.status(200).json({ message: 'Sauce updated !' });
@@ -76,7 +60,7 @@ exports.updateSauce = async (req, res, next) => {
 
 exports.deleteSauce = async (req, res, next) => {
     try {
-        const sauce = await getSaucesService.getOneSauce(req.params.id);
+        const sauce = await getSaucesService.getSauceById(req.params.id);
         if (req.auth.decodedUserId !== sauce.userId) {
             throw 'Unauthorized request !'
         }
@@ -91,6 +75,10 @@ exports.updateLikes = (req, res, next) => {
     const sauceId = req.params.id;
     const userId = req.body.userId;
     const like = req.body.like;
-    getSaucesService.handleLikes(sauceId, userId, like);
+    switch (like) {
+        case 1: this.likeSauce(sauceId, userId);
+        case 0: this.cancelLike(sauceId, userId);
+        case -1: this.dislikeSauce(sauceId, userId);
+    }
     res.status(200).json({ message: 'Likes updated !' });
 }
