@@ -1,6 +1,7 @@
 const UsersHandlingService = require('../domain/UsersHandlingService');
 const User = require('../domain/User');
-const User = require('../models/User');
+const Email = require('../domain/Email');
+const UserPassword = require('../domain/UserPassword');
 const MongoDBAdapter = require('../adapter/MongoDBAdapter');
 const InMemoryUserRepository = require('../domain/mock/InMemoryUserRepository');
 
@@ -23,25 +24,27 @@ const usersHandlingService = new UsersHandlingService(userRepository);
 
 
 exports.signup = (req, res, next) => {
-    const userSignupRequest = req.body;
-    const newUserRequestDTO = new UserRequestDTO({
-        ...userSignupRequest
-    });
     try {
-        usersHandlingService.createUser(newUserRequestDTO);
+        usersHandlingService.createUser({ 
+            email: new Email(req.body.email), 
+            password: UserPassword.fromTextPlain(req.body.password) 
+        });
         res.status(201).json({ message: 'New user created !' });
     }
-    catch {
+    catch(error) {
         res.status(500).json({ error });
     }
 }
 
 exports.login = async (req, res, next) => {
     try {
-        const userLoginRequest = req.body;
-        const userLogin = await usersHandlingService.createLoginSession(userLoginRequest)
+        // const userLoginRequest = req.body;
+        const userLogin = await usersHandlingService.createLoginSession({ 
+            email: new Email(req.body.email), 
+            password: UserPassword.fromTextPlain(req.body.password)
+        })
         res.status(200).json(userLogin)
-    } catch (error) {
+    } catch(error) {
         res.status(401).json({ error })
     }
 }
