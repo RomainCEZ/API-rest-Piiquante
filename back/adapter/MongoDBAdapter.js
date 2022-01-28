@@ -1,56 +1,65 @@
-const Sauce = require('../models/Sauce');
-const User = require('../models/User');
+const SauceModel = require('../models/Sauce');
+const UserModel = require('../models/User');
+const User = require('../domain/User');
+const Sauce = require('../domain/Sauce');
 
+class SauceDTO {
+    constructor({ _id, userId, name, description, manufacturer, mainPepper, heat, imageUrl, usersLiked = [], usersDisliked = [] }) {
+        this.id = _id;
+        this.userId = userId;
+        this.name = name;
+        this.description = description;
+        this.manufacturer = manufacturer;
+        this.mainPepper = mainPepper;
+        this.heat = heat;
+        this.imageUrl = imageUrl;
+        this.usersLiked = usersLiked;
+        this.usersDisliked = usersDisliked;
+    }
+    get likes() {
+        return this.usersLiked.length;
+    }
+    get dislikes() {
+        return this.usersDisliked.length;
+    }
+}
 class MongoDBAdapter {
     async getAllSauces() {
-        return await Sauce.find();
+        const sauceModels = await SauceModel.find();
+        const sauces = [];
+        sauceModels.forEach( sauceModels => {
+            sauces.push(new SauceDTO(...sauceModels));
+        })
+        return sauces;
     }
     async getOneSauce(sauceId) {
-        return await Sauce.findOne({ _id: sauceId });
+        const sauceModel = await SauceModel.findOne({ sauceId });
+        return new SauceDTO({ ...sauceModel });
     }
     async saveSauce(newSauce) {
-        delete newSauce._id;
-        const sauce = new Sauce({
+        const sauce = new SauceModel({
             ...newSauce
         })
         sauce.save();
     }
     async updateSauce(sauce) {
-        console.log
-        await Sauce.updateOne(
-            { _id: sauce._id },
+        await SauceModel.updateOne(
+            { _id: sauce.id },
             {
-                name: sauce.name,
-                manufacturer: sauce.manufacturer,
-                description: sauce.description,
-                mainPepper: sauce.mainPepper,
-                imageUrl: sauce.imageUrl,
-                heat: sauce.heat,
-                _id: sauce._id
+                ...sauce,
+                _id: sauce.id
             });
     }
-    async deleteSauceData(sauceId) {
-        await Sauce.deleteOne( { _id: sauceId })
+    async deleteSauce(sauceId) {
+        await SauceModel.deleteOne( { _id: sauceId })
     }
-    async updateLikes(sauce) {
-        await Sauce.updateOne(
-            { _id: sauce._id },
-            {
-                likes: sauce.likes,
-                dislikes: sauce.dislikes, 
-                usersLiked: sauce.usersLiked,
-                usersDisliked: sauce.usersDisliked,
-                _id: sauce._id
-            });
-    }
-    
-    async getOneUser(email) {
-        const user = await User.findOne({ email: email });
-        return user
+    async getUserByEmail(email) {
+        const user = await UserModel.findOne({ email: email });
+        return new User({ email: new Email(user.email), password: UserPassword.fromHash(user.password) })
     }
     saveUser(newUser) {
         try {
-            const user = new User({
+            const user = new UserModel({
                 email: newUser.email,
                 password: newUser.password
             })
