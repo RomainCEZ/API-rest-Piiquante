@@ -1,17 +1,31 @@
 const bcrypt = require('bcrypt');
 
 class UserPassword {
-    constructor(hash) {
-        // this.password = bcrypt.hashSync(password, 10);
-        this.hash = hash;
+    constructor(textPlainUserPassword, hashUserPassword) {
+        this.textPlainUserPassword = textPlainUserPassword;
+        this.hashUserPassword = hashUserPassword;
+        if (!this.hash) {
+            this.hash = bcrypt.hashSync(this.value, 10);
+        }
     }
-    static async hashPassword(password) {
-        const hash = await bcrypt.hash(password, 10);
-        return new UserPassword(hash);
+    get value() {
+        return this.textPlainUserPassword;
     }
-    static async comparePassword(userPassword, userPasswordHash) {
-        const valid = await bcrypt.compare(userPassword, userPasswordHash);
-        return valid;
+    get hash() {
+        if (!this.hashUserPassword) {
+            this.hashUserPassword = bcrypt.hashSync(this.value, 10);
+        }
+        return this.hashUserPassword;
+    }
+
+    toEqual(hash) {
+        return bcrypt.compareSync(this.value, hash);
+    }
+    static fromHash(hash) {
+        return new UserPassword(null, hash);
+    }
+    static fromTextPlain(textPlainUserPassword) {
+        return new UserPassword(textPlainUserPassword, null);
     }
 }
 
