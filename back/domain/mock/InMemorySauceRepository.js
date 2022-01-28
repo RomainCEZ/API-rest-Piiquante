@@ -5,18 +5,18 @@ class InMemorySauceRepository {
     getAllSauces() {
         return this.sauces;
     }
-    getOneSauce(sauceId) {
-        return this.sauces.find( sauce => sauce._id === sauceId);
+    getSauceById(sauceId) {
+        return this.sauces.find( sauce => sauce.id === sauceId);
     }
     saveSauce(newSauce) {
         this.sauces.push(newSauce);
     }
     updateSauce(sauce) {
-        this.deleteSauceData(sauce._id);
+        this.deleteSauce(sauce.id);
         this.sauces.push(sauce);
     }
-    deleteSauceData(sauceId) {
-        const sauceIndex = this.sauces.findIndex( sauce => sauce._id == sauceId);
+    deleteSauce(sauceId) {
+        const sauceIndex = this.sauces.findIndex( sauce => sauce.id == sauceId);
         this.sauces.splice(sauceIndex, 1);
     }
 }
